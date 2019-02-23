@@ -25,6 +25,8 @@ import (
 // DbWrapper stores the pointer to a implementation of ycsb.DB.
 type DbWrapper struct {
 	DB ycsb.DB
+  update_cnt int
+  err_cnt int
 }
 
 func measure(start time.Time, op string, err error) {
@@ -86,12 +88,23 @@ func (db DbWrapper) Scan(ctx context.Context, table string, startKey string, cou
 }
 
 func (db DbWrapper) Update(ctx context.Context, table string, key string, values map[string][]byte) (err error) {
+  db.update_cnt = db.update_cnt + 1
+  if db.update_cnt % 1000000 == 0 {
+    fmt.Printf("update %d\n", db.update_cnt)
+  }
 	start := time.Now()
 	defer func() {
 		measure(start, "UPDATE", err)
 	}()
 
-	return db.DB.Update(ctx, table, key, values)
+  e := db.DB.Update(ctx, table, key, values)
+  if e != nil {
+    db.err_cnt = db.err_cnt + 1
+    if db.err_cnt % 100000 == 1 {
+      fmt.Printf("update error %d\n", db.err_cnt)
+    }
+  }
+  return e
 }
 
 func (db DbWrapper) BatchUpdate(ctx context.Context, table string, keys []string, values []map[string][]byte) (err error) {
