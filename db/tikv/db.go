@@ -36,6 +36,7 @@ func (c tikvCreator) Create(p *properties.Properties) (ycsb.DB, error) {
 	conf := config.Default()
 	conf.RPC.MaxConnectionCount = p.GetUint(tikvConnCount, 128)
 	conf.RPC.Batch.MaxBatchSize = p.GetUint(tikvBatchSize, 128)
+  conf.Txn.EntrySizeLimit = 120000000
 
 	tp := p.GetString(tikvType, "raw")
 	switch tp {
